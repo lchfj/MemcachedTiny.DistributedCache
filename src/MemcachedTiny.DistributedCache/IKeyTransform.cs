@@ -17,6 +17,11 @@ namespace MemcachedTiny.DistributedCache
     /// </summary>
     public interface IKeyTransform
     {
+        /// <summary>
+        /// 转换缓存键以满足Memcached要求
+        /// </summary>
+        /// <param name="key">原始缓存键</param>
+        /// <returns>新的缓存键</returns>
         string TransformKey(string key);
     }
 }

@@ -48,15 +48,15 @@ namespace MemcachedTiny.DistributedCache
         /// </summary>
         protected virtual IMemcachedClient CreatClient(IMemcachedClientSetting option)
         {
-            throw new NotImplementedException();
+            return new MemcachedClient(option);
         }
 
         /// <summary>
         /// 创建缓存键转换器
         /// </summary>
-        protected virtual IKeyTransform CreatKeyTransform(MemcachedOption option)
+        protected virtual IKeyTransform CreatKeyTransform(MemcachedOption _)
         {
-            throw new NotImplementedException();
+            return new KeyTransform();
         }
 
         /// <summary>
