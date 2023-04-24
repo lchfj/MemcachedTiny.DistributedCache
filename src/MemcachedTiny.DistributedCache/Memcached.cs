@@ -79,11 +79,11 @@ namespace MemcachedTiny.DistributedCache
         /// 创建写入器
         /// </summary>
         /// <param name="value">值</param>
-        /// <param name="options">值的缓存参数</param>
+        /// <param name="option">值的缓存参数</param>
         /// <returns></returns>
-        protected virtual IValueWriter CreatValueWriter(byte[] value, DistributedCacheEntryOptions options)
+        protected virtual IValueWriter CreatValueWriter(byte[] value, DistributedCacheEntryOptions option)
         {
-            throw new NotImplementedException();
+            return new ValueWriter(value, option, Compress);
         }
 
         /// <inheritdoc/>

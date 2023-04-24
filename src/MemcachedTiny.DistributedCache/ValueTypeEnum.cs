@@ -13,15 +13,25 @@
 namespace MemcachedTiny.DistributedCache
 {
     /// <summary>
-    /// 数据压缩接口（要求线程安全）
+    /// 数据类型
     /// </summary>
-    public interface ICompress
+    public enum ValueTypeEnum
     {
         /// <summary>
-        /// 压缩数据
+        /// 没有特殊处理的数据
         /// </summary>
-        /// <param name="value">原始数据</param>
-        /// <returns></returns>
-        byte[] Compress(byte[] value);
+        Original = 0,
+        /// <summary>
+        /// 这是一个滑动过期时间缓存
+        /// </summary>
+        Sliding = 1,
+        /// <summary>
+        /// 数据经过压缩
+        /// </summary>
+        Compress = 2,
+        /// <summary>
+        /// 分片保存的数据
+        /// </summary>
+        Split = 4
     }
 }
