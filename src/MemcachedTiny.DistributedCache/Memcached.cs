@@ -72,7 +72,7 @@ namespace MemcachedTiny.DistributedCache
         /// </summary>
         protected virtual IValueReader CreatValueReader(string key, Result.IGetResult result)
         {
-            throw new NotImplementedException();
+            return new ValueReader(key, result, Compress);
         }
 
         /// <summary>

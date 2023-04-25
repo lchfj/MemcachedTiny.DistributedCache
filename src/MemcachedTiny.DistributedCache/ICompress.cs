@@ -23,5 +23,11 @@ namespace MemcachedTiny.DistributedCache
         /// <param name="value">原始数据</param>
         /// <returns></returns>
         byte[] Compress(byte[] value);
+        /// <summary>
+        /// 从流中解压缩数据
+        /// </summary>
+        /// <param name="valueStream"></param>
+        /// <returns></returns>
+        byte[] Decompress(MemoryStream valueStream);
     }
 }
