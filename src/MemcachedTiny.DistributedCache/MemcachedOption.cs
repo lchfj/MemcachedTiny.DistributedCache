@@ -12,7 +12,14 @@
 
 namespace MemcachedTiny.DistributedCache
 {
+    /// <summary>
+    /// 缓存选项
+    /// </summary>
     public class MemcachedOption : MemcachedClientSetting
     {
+        /// <summary>
+        /// 禁用压缩
+        /// </summary>
+        public bool DisabledCompress { get; internal set; }
     }
 }

@@ -13,7 +13,7 @@
 namespace MemcachedTiny.DistributedCache
 {
     /// <summary>
-    /// 缓存键转换接口
+    /// 缓存键转换接口（要求线程安全）
     /// </summary>
     public interface IKeyTransform
     {

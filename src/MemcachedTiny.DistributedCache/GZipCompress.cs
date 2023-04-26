@@ -10,24 +10,32 @@
  * You should have received a copy of the GNU Lesser General Public License along with MemcachedTiny.DistributedCache. If not, see <https://www.gnu.org/licenses/>.
  */
 
+using System.IO.Compression;
+
 namespace MemcachedTiny.DistributedCache
 {
     /// <summary>
-    /// 数据压缩接口（要求线程安全）
+    /// GZip压缩实现
     /// </summary>
-    public interface ICompress
+    public class GZipCompress : ICompress
     {
-        /// <summary>
-        /// 压缩数据
-        /// </summary>
-        /// <param name="value">原始数据</param>
-        /// <returns></returns>
-        byte[] Compress(byte[] value);
-        /// <summary>
-        /// 从流中解压缩数据
-        /// </summary>
-        /// <param name="valueStream"></param>
-        /// <returns></returns>
-        byte[] Decompress(Stream valueStream);
+        /// <inheritdoc/>
+        public byte[] Compress(byte[] value)
+        {
+            using var compressedStream = new MemoryStream(value.Length);
+            using var gzip = new GZipStream(compressedStream, CompressionLevel.Fastest);
+            gzip.Write(value);
+            gzip.Flush();
+            return compressedStream.ToArray();
+        }
+
+        /// <inheritdoc/>
+        public byte[] Decompress(Stream compressedStream)
+        {
+            using var gzip = new GZipStream(compressedStream, CompressionMode.Decompress);
+            using var originalStream = new MemoryStream();
+            gzip.CopyTo(originalStream);
+            return originalStream.ToArray();
+        }
     }
 }

@@ -39,7 +39,7 @@ namespace MemcachedTiny.DistributedCache
         public Memcached(MemcachedOption option)
         {
             MemcachedClient = CreatClient(option);
-            KeyTransform = CreatKeyTransform(option);
+            KeyTransform = CreatKeyTransform();
             Compress = CreatCompress(option);
         }
 
@@ -54,7 +54,7 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 创建缓存键转换器
         /// </summary>
-        protected virtual IKeyTransform CreatKeyTransform(MemcachedOption _)
+        protected virtual IKeyTransform CreatKeyTransform()
         {
             return new KeyTransform();
         }
@@ -64,7 +64,10 @@ namespace MemcachedTiny.DistributedCache
         /// </summary>
         protected virtual ICompress CreatCompress(MemcachedOption option)
         {
-            throw new NotImplementedException();
+            if (option.DisabledCompress)
+                return null;
+
+            return new GZipCompress();
         }
 
         /// <summary>
