@@ -10,16 +10,35 @@
  * You should have received a copy of the GNU Lesser General Public License along with MemcachedTiny.DistributedCache. If not, see <https://www.gnu.org/licenses/>.
  */
 
+using Microsoft.Extensions.Logging;
+using TL = MemcachedTiny.Logging;
+
 namespace MemcachedTiny.DistributedCache
 {
     /// <summary>
-    /// 缓存选项
+    /// 日志工厂适配器
     /// </summary>
-    public class MemcachedOption : MemcachedClientSetting
+    public class MSLoggerFactoryAdapter : TL.ILoggerFactory
     {
         /// <summary>
-        /// 禁用压缩
+        /// 真正的工厂
         /// </summary>
-        public bool DisabledCompress { get; set; }
+        protected virtual ILoggerFactory LoggerFactory { get; }
+
+        /// <summary>
+        /// 创建实例
+        /// </summary>
+        /// <param name="loggerFactory"></param>
+        public MSLoggerFactoryAdapter(ILoggerFactory loggerFactory)
+        {
+            LoggerFactory = loggerFactory;
+        }
+
+        /// <inheritdoc/>
+        public virtual TL.ILogger<T> CreateLogger<T>()
+        {
+            var logger = LoggerFactory.CreateLogger<T>();
+            return new MSLoggerAdapter<T>(logger);
+        }
     }
 }
