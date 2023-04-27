@@ -21,9 +21,9 @@ namespace MemcachedTiny.DistributedCache
     public class ValueWriter : IValueWriter
     {
         /// <summary>
-        /// Memcached 允许的最大大侠
+        /// Memcached 允许的最大大小
         /// </summary>
-        protected const int MaxSize = 1024 * 1024;
+        protected const int MaxSize = 1020 * 1024;
         /// <summary>
         /// 启动压缩的数据最小大小
         /// </summary>
@@ -69,7 +69,7 @@ namespace MemcachedTiny.DistributedCache
         /// <returns></returns>
         protected virtual byte[] ChangeOptions()
         {
-            byte[] slidingArray = null;
+            var slidingArray = Array.Empty<byte>();
 
             var now = DateTime.UtcNow.Ticks;
             long expirationTime;
@@ -80,9 +80,14 @@ namespace MemcachedTiny.DistributedCache
             else if (Options.SlidingExpiration.HasValue)
             {
                 var ticks = Options.SlidingExpiration.Value.Ticks;
+                if (ticks < TimeSpan.TicksPerSecond)
+                    ticks = TimeSpan.TicksPerSecond;
 
-                expirationTime = now + ticks + TimeSpan.TicksPerMinute * 5;
+                var extendTime = Math.Min(ticks / 2, ConstValue.MaxExtendTime);
+                if (extendTime < TimeSpan.TicksPerSecond)
+                    extendTime = TimeSpan.TicksPerSecond;
 
+                expirationTime = now + ticks + extendTime;
                 slidingArray = new byte[16];
                 MBitConverter.GetByte(ticks).CopyTo(slidingArray, 0);
                 MBitConverter.GetByte(expirationTime).CopyTo(slidingArray, 8);
@@ -150,12 +155,12 @@ namespace MemcachedTiny.DistributedCache
             var valueType = ValueTypeEnum.Original;
 
             var slidingArray = ChangeOptions();
-            if (slidingArray is not null)
+            if (slidingArray.Length > 0)
                 valueType |= ValueTypeEnum.Sliding;
 
 
             var value = CompressValue();
-            if (value is null)
+            if (value is null || value.Length >= OriginalValue.Length)
                 value = OriginalValue;
             else
                 valueType |= ValueTypeEnum.Compress;
@@ -174,7 +179,7 @@ namespace MemcachedTiny.DistributedCache
                     var key = Guid.NewGuid();
                     store.Write(key.ToByteArray());
 
-                    memcachedClient.Set(key.ToString(), 0, Second, item);
+                    var t = memcachedClient.Set(key.ToString(), 0, Second, item);
                 }
 
                 value = store.ToArray();
@@ -203,7 +208,7 @@ namespace MemcachedTiny.DistributedCache
             var valueType = ValueTypeEnum.Original;
 
             var slidingArray = ChangeOptions();
-            if (slidingArray is not null)
+            if (slidingArray.Length > 0)
                 valueType |= ValueTypeEnum.Sliding;
 
 

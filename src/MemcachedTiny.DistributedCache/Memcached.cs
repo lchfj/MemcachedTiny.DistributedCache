@@ -95,6 +95,8 @@ namespace MemcachedTiny.DistributedCache
             key = KeyTransform.TransformKey(key);
 
             var result = MemcachedClient.Get(key);
+            if (!result.Success)
+                return null;
 
             var reader = CreatValueReader(key, result);
             reader.PrepareGet(MemcachedClient);
@@ -108,6 +110,8 @@ namespace MemcachedTiny.DistributedCache
             key = KeyTransform.TransformKey(key);
 
             var result = await MemcachedClient.GetAsync(key, token).ConfigureAwait(false);
+            if (!result.Success)
+                return null;
 
             var reader = CreatValueReader(key, result);
             await reader.PrepareGetAsync(MemcachedClient, token).ConfigureAwait(false);
@@ -121,6 +125,8 @@ namespace MemcachedTiny.DistributedCache
             key = KeyTransform.TransformKey(key);
 
             var result = MemcachedClient.Get(key);
+            if (!result.Success)
+                return;
 
             var reader = CreatValueReader(key, result);
             reader.Touch(MemcachedClient);
@@ -132,6 +138,8 @@ namespace MemcachedTiny.DistributedCache
             key = KeyTransform.TransformKey(key);
 
             var result = await MemcachedClient.GetAsync(key, token).ConfigureAwait(false);
+            if (!result.Success)
+                return;
 
             var reader = CreatValueReader(key, result);
             await reader.TouchAsync(MemcachedClient, token).ConfigureAwait(false);

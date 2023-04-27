@@ -23,9 +23,9 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 时间信息
         /// </summary>
-        /// <param name="SpanSecond">新的过期时间（从现在开始的秒数）</param>
+        /// <param name="Second">新的过期时间（从现在开始的秒数）</param>
         /// <param name="Time">新的过期时间（UTC-Ticks）</param>
-        protected record TimeInfo(uint SpanSecond, long Time);
+        protected record TimeInfo(uint Second, long Time);
 
         /// <summary>
         /// memcached 单片最大值
@@ -67,20 +67,29 @@ namespace MemcachedTiny.DistributedCache
         /// <returns>null：当前的时间无需更新</returns>
         protected virtual TimeInfo GetNewTime()
         {
+            var now = DateTime.UtcNow.Ticks;
             var slidingTime = MBitConverter.ReadLong(Result.Value, 0);
             var expiration = MBitConverter.ReadLong(Result.Value, 8);
 
-            var now = DateTime.UtcNow.Ticks;
-
-            var max = TimeSpan.TicksPerDay * 30 - TimeSpan.TicksPerMinute * 5;
-            if (slidingTime >= max)
-                slidingTime = max;
-
-            if (expiration - now > slidingTime)
+            var extendTime = Math.Min(slidingTime / 2, ConstValue.MaxExtendTime);
+            if (expiration < now + extendTime)
                 return null;
 
-            var span = slidingTime + TimeSpan.TicksPerMinute * 5;
-            return new TimeInfo(Convert.ToUInt32(span / TimeSpan.TicksPerSecond), now + span);
+            {
+                var max = TimeSpan.TicksPerDay * 30 - extendTime;
+                if (slidingTime >= max)
+                    slidingTime = max;
+            }
+
+            if (expiration - now - extendTime > slidingTime)
+                return new TimeInfo(0, 0);
+
+            var span = slidingTime + extendTime;
+            var second = Convert.ToUInt32(span / TimeSpan.TicksPerSecond);
+            if (second <= 0)
+                second = 1;
+
+            return new TimeInfo(second, now + span);
         }
 
         /// <summary>
@@ -101,7 +110,7 @@ namespace MemcachedTiny.DistributedCache
             while (position < value.Length)
             {
                 Array.Copy(value, position, buffer, 0, 16);
-                list.Add(new Guid(value));
+                list.Add(new Guid(buffer));
                 position += 16;
             }
 
@@ -120,7 +129,7 @@ namespace MemcachedTiny.DistributedCache
             Result.Value.CopyTo(buffer, 0);
 
             var array = MBitConverter.GetByte(newTime.Time);
-            array.CopyTo(buffer, 0);
+            array.CopyTo(buffer, 8);
 
             return buffer;
         }
@@ -140,10 +149,15 @@ namespace MemcachedTiny.DistributedCache
             if (valueType.HasFlag(ValueTypeEnum.Sliding))
             {
                 newTime = GetNewTime();
-                if (newTime is not null)
+                if (newTime is null)
+                {
+                    Value = null;
+                    return;
+                }
+                else if (newTime.Second > 0)
                 {
                     var buffer = GetNewMainValue(newTime);
-                    memcachedClient.Set(Key, Result.Flags, newTime.SpanSecond, buffer);
+                    memcachedClient.Set(Key, Result.Flags, newTime.Second, buffer);
                 }
             }
 
@@ -155,10 +169,10 @@ namespace MemcachedTiny.DistributedCache
                 foreach (var guid in subList)
                 {
                     IGetResult sub;
-                    if (newTime is null)
+                    if (newTime is null || newTime.Second == 0)
                         sub = memcachedClient.Get(guid.ToString());
                     else
-                        sub = memcachedClient.GetAndTouch(guid.ToString(), newTime.SpanSecond);
+                        sub = memcachedClient.GetAndTouch(guid.ToString(), newTime.Second);
 
                     if (!sub.Success)
                     {
@@ -199,10 +213,15 @@ namespace MemcachedTiny.DistributedCache
             if (valueType.HasFlag(ValueTypeEnum.Sliding))
             {
                 newTime = GetNewTime();
-                if (newTime is not null)
+                if (newTime is null)
+                {
+                    Value = null;
+                    return;
+                }
+                else if (newTime.Second > 0)
                 {
                     var buffer = GetNewMainValue(newTime);
-                    _ = memcachedClient.SetAsync(Key, Result.Flags, newTime.SpanSecond, buffer, token);
+                    _ = memcachedClient.SetAsync(Key, Result.Flags, newTime.Second, buffer, token);
                 }
             }
 
@@ -214,10 +233,10 @@ namespace MemcachedTiny.DistributedCache
                 var taskList = new List<Task<IGetResult>>(subList.Count);
                 foreach (var guid in subList)
                 {
-                    if (newTime is null)
+                    if (newTime is null || newTime.Second == 0)
                         taskList.Add(memcachedClient.GetAsync(guid.ToString(), token));
                     else
-                        taskList.Add(memcachedClient.GetAndTouchAsync(guid.ToString(), newTime.SpanSecond, token));
+                        taskList.Add(memcachedClient.GetAndTouchAsync(guid.ToString(), newTime.Second, token));
                 }
                 await Task.WhenAll(taskList.ToArray()).ConfigureAwait(false);
 
@@ -262,12 +281,12 @@ namespace MemcachedTiny.DistributedCache
                 return;
 
             var newTime = GetNewTime();
-            if (newTime is null)
+            if (newTime is null || newTime.Second == 0)
                 return;
 
             {
                 var array = GetNewMainValue(newTime);
-                memcachedClient.Set(Key, Result.Flags, newTime.SpanSecond, array);
+                memcachedClient.Set(Key, Result.Flags, newTime.Second, array);
             }
 
             if (!valueType.HasFlag(ValueTypeEnum.Split))
@@ -275,7 +294,7 @@ namespace MemcachedTiny.DistributedCache
 
             var subList = GetSubKey();
             foreach (var sub in subList)
-                memcachedClient.Touch(sub.ToString(), newTime.SpanSecond);
+                memcachedClient.Touch(sub.ToString(), newTime.Second);
         }
 
         /// <inheritdoc/>
@@ -286,14 +305,14 @@ namespace MemcachedTiny.DistributedCache
                 return Task.CompletedTask;
 
             var newTime = GetNewTime();
-            if (newTime is null)
+            if (newTime is null || newTime.Second == 0)
                 return Task.CompletedTask;
 
             var taskList = new List<Task>();
 
             {
                 var array = GetNewMainValue(newTime);
-                taskList.Add(memcachedClient.SetAsync(Key, Result.Flags, newTime.SpanSecond, array, token));
+                taskList.Add(memcachedClient.SetAsync(Key, Result.Flags, newTime.Second, array, token));
             }
 
             if (!valueType.HasFlag(ValueTypeEnum.Split))
@@ -301,7 +320,7 @@ namespace MemcachedTiny.DistributedCache
 
             var subList = GetSubKey();
             foreach (var sub in subList)
-                taskList.Add(memcachedClient.TouchAsync(sub.ToString(), newTime.SpanSecond, token));
+                taskList.Add(memcachedClient.TouchAsync(sub.ToString(), newTime.Second, token));
 
             return Task.WhenAll(taskList.ToArray());
         }
