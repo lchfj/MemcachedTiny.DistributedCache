@@ -47,7 +47,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IDistributedCache>(provider =>
             {
                 var config = provider.GetService<IConfiguration>();
-                var option = config.GetSection("MemcacheTiny").Get<MemcachedOption>();
+                var option = config?.GetSection("MemcacheTiny").Get<MemcachedOption>();
 
                 option ??= new MemcachedOption();
 
