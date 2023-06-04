@@ -65,7 +65,7 @@ namespace MemcachedTiny.DistributedCache
             var lengthBuffer = new byte[4];
             compressedStream.Read(lengthBuffer);
             var length = MBitConverter.ReadInt(lengthBuffer, 0);
-            var buffer = new byte[length];
+            var buffer = GC.AllocateUninitializedArray<byte>(length);
 
             using var memoryStream = new MemoryStream(buffer);
             using var gzip = new GZipStream(compressedStream, CompressionMode.Decompress);

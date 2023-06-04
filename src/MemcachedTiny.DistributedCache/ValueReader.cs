@@ -125,7 +125,7 @@ namespace MemcachedTiny.DistributedCache
         /// <returns></returns>
         protected virtual byte[] GetNewMainValue(TimeInfo newTime)
         {
-            var buffer = new byte[Result.Value.Length];
+            var buffer = GC.AllocateUninitializedArray<byte>(Result.Value.Length);
             Result.Value.CopyTo(buffer, 0);
 
             var array = MBitConverter.GetByte(newTime.Time);

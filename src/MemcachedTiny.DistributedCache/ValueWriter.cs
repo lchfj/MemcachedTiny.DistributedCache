@@ -130,7 +130,7 @@ namespace MemcachedTiny.DistributedCache
             while (position < value.Length)
             {
                 var length = Math.Min(value.Length - position, MaxSize);
-                var buffer = new byte[length];
+                var buffer = GC.AllocateUninitializedArray<byte>(length);
 
                 Array.Copy(value, position, buffer, 0, buffer.Length);
 
@@ -181,19 +181,17 @@ namespace MemcachedTiny.DistributedCache
 
 
             Flags = (int)valueType;
-            if (valueType == ValueTypeEnum.Original)
+            if (slidingArray.Length == 0)
             {
                 Value = value;
-                return;
+            }
+            else
+            {
+                Value = GC.AllocateUninitializedArray<byte>(slidingArray.Length + value.Length);
+                slidingArray.CopyTo(Value, 0);
+                value.CopyTo(Value, slidingArray.Length);
             }
 
-            var allLengh = slidingArray.Length + value.Length;
-            using var mem = new MemoryStream(allLengh);
-
-            mem.Write(slidingArray);
-            mem.Write(value);
-
-            Value = mem.ToArray();
         }
 
         /// <inheritdoc/>
@@ -237,13 +235,13 @@ namespace MemcachedTiny.DistributedCache
             if (slidingArray.Length == 0)
             {
                 Value = value;
-                return Task.CompletedTask;
             }
-
-
-            Value = new byte[slidingArray.Length + value.Length];
-            slidingArray.CopyTo(Value, 0);
-            value.CopyTo(Value, slidingArray.Length);
+            else
+            {
+                Value = GC.AllocateUninitializedArray<byte>(slidingArray.Length + value.Length);
+                slidingArray.CopyTo(Value, 0);
+                value.CopyTo(Value, slidingArray.Length);
+            }
 
 
             if (taskList.Count <= 0)
