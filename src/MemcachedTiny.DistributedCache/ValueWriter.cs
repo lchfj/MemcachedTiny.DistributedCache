@@ -24,10 +24,6 @@ namespace MemcachedTiny.DistributedCache
         /// Memcached 允许的最大大小
         /// </summary>
         protected const int MaxSize = 1020 * 1024;
-        /// <summary>
-        /// 启动压缩的数据最小大小
-        /// </summary>
-        protected virtual int CompressSize => 4 * 1024 - 16;
 
         /// <inheritdoc/>
         public virtual int Flags { get; set; }
@@ -117,10 +113,7 @@ namespace MemcachedTiny.DistributedCache
         /// <returns></returns>
         protected virtual byte[] CompressValue()
         {
-            if (OriginalValue.Length <= CompressSize || Compress is null)
-                return null;
-
-            return Compress.Compress(OriginalValue);
+            return Compress?.Compress(OriginalValue);
         }
 
         /// <summary>
@@ -160,7 +153,7 @@ namespace MemcachedTiny.DistributedCache
 
 
             var value = CompressValue();
-            if (value is null || value.Length >= OriginalValue.Length)
+            if (value is null)
                 value = OriginalValue;
             else
                 valueType |= ValueTypeEnum.Compress;

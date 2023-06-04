@@ -64,10 +64,10 @@ namespace MemcachedTiny.DistributedCache
         /// </summary>
         protected virtual ICompress CreatCompress(MemcachedOption option)
         {
-            if (option.DisabledCompress)
+            if (option.CompressDisabled)
                 return null;
 
-            return new GZipCompress();
+            return new GZipCompress(option.CompressMinSize, option.CompressRate);
         }
 
         /// <summary>

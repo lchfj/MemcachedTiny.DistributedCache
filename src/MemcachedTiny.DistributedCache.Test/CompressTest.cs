@@ -1,11 +1,11 @@
 ﻿namespace MemcachedTiny.DistributedCache.Test
 {
     [TestClass]
-    public class LongData
+    public class CompressTest
     {
         public Memcached Memcached { get; }
 
-        public LongData()
+        public CompressTest()
         {
             Memcached = CreatClient();
         }
@@ -18,12 +18,26 @@
             });
         }
 
+        public byte[] CreatLongValue()
+        {
+            var value = new byte[1024 * 1024 * 9];
+            var stream = new MemoryStream(value);
+            for (var i = 0; i < 1024 * 9; i++)
+            {
+                var data = (byte)Random.Shared.Next(byte.MaxValue);
+                for (var j = 0; j < 1024; j++)
+                {
+                    stream.WriteByte(data);
+                }
+            }
+            return value;
+        }
+
         [TestMethod]
         public virtual void SyncOne()
         {
             var key = Guid.NewGuid().ToString();
-            var value = new byte[1024 * 1024 * 9 / 2];
-            Random.Shared.NextBytes(value);
+            var value = CreatLongValue();
 
             Memcached.Set(key, value, null);
 
@@ -37,8 +51,7 @@
         public virtual async Task AsyncOne()
         {
             var key = Guid.NewGuid().ToString();
-            var value = new byte[1024 * 1024 * 9 / 2];
-            Random.Shared.NextBytes(value);
+            var value = CreatLongValue();
 
             await Memcached.SetAsync(key, value, null).ConfigureAwait(false);
 

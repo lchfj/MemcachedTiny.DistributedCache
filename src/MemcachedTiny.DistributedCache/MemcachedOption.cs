@@ -20,6 +20,16 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 禁用压缩
         /// </summary>
-        public bool DisabledCompress { get; set; }
+        public bool CompressDisabled { get; set; }
+        /// <summary>
+        /// 启用压缩的最小大小
+        /// </summary>
+        /// <remarks>原始数据大小大于本设定值才会启用压缩</remarks>
+        public int? CompressMinSize { get; set; }
+        /// <summary>
+        /// 压缩后数据需要达到的最小比例（%）
+        /// </summary>
+        /// <remarks>压缩后数据大小 / 压缩前数据大小 小于 本设定值 才会启用压缩支持 </remarks>
+        public int? CompressRate { get; set; }
     }
 }
