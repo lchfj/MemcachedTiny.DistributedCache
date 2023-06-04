@@ -20,7 +20,7 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 读取到的值
         /// </summary>
-        byte[] Value { get; }
+        byte[]? Value { get; }
         /// <summary>
         /// 准备读取
         /// </summary>

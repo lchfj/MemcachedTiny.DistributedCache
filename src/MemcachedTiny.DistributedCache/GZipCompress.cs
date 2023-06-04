@@ -40,7 +40,7 @@ namespace MemcachedTiny.DistributedCache
         }
 
         /// <inheritdoc/>
-        public byte[] Compress(byte[] value)
+        public virtual byte[]? Compress(byte[] value)
         {
             if (value.Length < CompressMinSize)
                 return null;
@@ -60,7 +60,7 @@ namespace MemcachedTiny.DistributedCache
         }
 
         /// <inheritdoc/>
-        public byte[] Decompress(Stream compressedStream)
+        public virtual byte[] Decompress(Stream compressedStream)
         {
             var lengthBuffer = new byte[4];
             compressedStream.Read(lengthBuffer);

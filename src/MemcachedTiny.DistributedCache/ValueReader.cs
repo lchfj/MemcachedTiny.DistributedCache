@@ -33,7 +33,7 @@ namespace MemcachedTiny.DistributedCache
         protected const int MaxSize = 1024 * 1024;
 
         /// <inheritdoc/>
-        public virtual byte[] Value { get; internal set; }
+        public virtual byte[]? Value { get; internal set; }
 
         /// <summary>
         /// 缓存键
@@ -46,7 +46,7 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 数据压缩器
         /// </summary>
-        protected virtual ICompress Compress { get; }
+        protected virtual ICompress? Compress { get; }
 
         /// <summary>
         /// 创建实例
@@ -54,7 +54,7 @@ namespace MemcachedTiny.DistributedCache
         /// <param name="key"></param>
         /// <param name="result"></param>
         /// <param name="compress"></param>
-        public ValueReader(string key, IGetResult result, ICompress compress)
+        public ValueReader(string key, IGetResult result, ICompress? compress)
         {
             Key = key;
             Result = result;
@@ -65,7 +65,7 @@ namespace MemcachedTiny.DistributedCache
         /// 获取新的过期时间
         /// </summary>
         /// <returns>null：当前的时间无需更新</returns>
-        protected virtual TimeInfo GetNewTime()
+        protected virtual TimeInfo? GetNewTime()
         {
             var now = DateTime.UtcNow.Ticks;
             var slidingTime = MBitConverter.ReadLong(Result.Value, 0);
@@ -145,7 +145,7 @@ namespace MemcachedTiny.DistributedCache
                 return;
             }
 
-            TimeInfo newTime = null;
+            TimeInfo? newTime = null;
             if (valueType.HasFlag(ValueTypeEnum.Sliding))
             {
                 newTime = GetNewTime();
@@ -194,7 +194,7 @@ namespace MemcachedTiny.DistributedCache
 
             valueStream.Position = 0;
             if (valueType.HasFlag(ValueTypeEnum.Compress))
-                Value = Compress.Decompress(valueStream);
+                Value = Compress?.Decompress(valueStream);
             else
                 Value = valueStream.ToArray();
         }
@@ -209,7 +209,7 @@ namespace MemcachedTiny.DistributedCache
                 return;
             }
 
-            TimeInfo newTime = null;
+            TimeInfo? newTime = null;
             if (valueType.HasFlag(ValueTypeEnum.Sliding))
             {
                 newTime = GetNewTime();
@@ -266,7 +266,7 @@ namespace MemcachedTiny.DistributedCache
 
             valueStream.Position = 0;
             if (valueType.HasFlag(ValueTypeEnum.Compress))
-                Value = Compress.Decompress(valueStream);
+                Value = Compress?.Decompress(valueStream);
             else
                 Value = valueStream.ToArray();
         }

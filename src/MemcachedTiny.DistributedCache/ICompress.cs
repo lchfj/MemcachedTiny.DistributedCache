@@ -22,7 +22,7 @@ namespace MemcachedTiny.DistributedCache
         /// </summary>
         /// <param name="value">原始数据</param>
         /// <returns></returns>
-        byte[] Compress(byte[] value);
+        byte[]? Compress(byte[] value);
         /// <summary>
         /// 从流中解压缩数据
         /// </summary>

@@ -30,7 +30,7 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 数据压缩接口
         /// </summary>
-        protected virtual ICompress Compress { get; }
+        protected virtual ICompress? Compress { get; }
 
         /// <summary>
         /// 创建实例
@@ -62,7 +62,7 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 创建数据压缩方法
         /// </summary>
-        protected virtual ICompress CreatCompress(MemcachedOption option)
+        protected virtual ICompress? CreatCompress(MemcachedOption option)
         {
             if (option.CompressDisabled)
                 return null;
@@ -75,6 +75,9 @@ namespace MemcachedTiny.DistributedCache
         /// </summary>
         protected virtual IValueReader CreatValueReader(string key, Result.IGetResult result)
         {
+            if (result is null)
+                throw new ArgumentNullException(nameof(result));
+
             return new ValueReader(key, result, Compress);
         }
 
@@ -84,13 +87,16 @@ namespace MemcachedTiny.DistributedCache
         /// <param name="value">值</param>
         /// <param name="option">值的缓存参数</param>
         /// <returns></returns>
-        protected virtual IValueWriter CreatValueWriter(byte[] value, DistributedCacheEntryOptions option)
+        protected virtual IValueWriter CreatValueWriter(byte[] value, DistributedCacheEntryOptions? option)
         {
+            if (value is null)
+                throw new ArgumentNullException(nameof(value));
+
             return new ValueWriter(value, option, Compress);
         }
 
         /// <inheritdoc/>
-        public virtual byte[] Get(string key)
+        public virtual byte[]? Get(string key)
         {
             key = KeyTransform.TransformKey(key);
 
@@ -105,7 +111,7 @@ namespace MemcachedTiny.DistributedCache
         }
 
         /// <inheritdoc/>
-        public virtual async Task<byte[]> GetAsync(string key, CancellationToken token = default)
+        public virtual async Task<byte[]?> GetAsync(string key, CancellationToken token = default)
         {
             key = KeyTransform.TransformKey(key);
 
@@ -162,7 +168,7 @@ namespace MemcachedTiny.DistributedCache
         }
 
         /// <inheritdoc/>
-        public virtual void Set(string key, byte[] value, DistributedCacheEntryOptions options)
+        public virtual void Set(string key, byte[] value, DistributedCacheEntryOptions? options)
         {
             key = KeyTransform.TransformKey(key);
 
@@ -172,7 +178,7 @@ namespace MemcachedTiny.DistributedCache
         }
 
         /// <inheritdoc/>
-        public virtual async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default)
+        public virtual async Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions? options, CancellationToken token = default)
         {
             key = KeyTransform.TransformKey(key);
 

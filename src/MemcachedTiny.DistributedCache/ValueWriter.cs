@@ -39,11 +39,11 @@ namespace MemcachedTiny.DistributedCache
         /// <summary>
         /// 缓存选项
         /// </summary>
-        protected virtual DistributedCacheEntryOptions Options { get; }
+        protected virtual DistributedCacheEntryOptions? Options { get; }
         /// <summary>
         /// 压缩器
         /// </summary>
-        protected virtual ICompress Compress { get; }
+        protected virtual ICompress? Compress { get; }
 
 
         /// <summary>
@@ -52,11 +52,12 @@ namespace MemcachedTiny.DistributedCache
         /// <param name="value">值</param>
         /// <param name="options">选项</param>
         /// <param name="compress">压缩器</param>
-        public ValueWriter(byte[] value, DistributedCacheEntryOptions options, ICompress compress)
+        public ValueWriter(byte[] value, DistributedCacheEntryOptions? options, ICompress? compress)
         {
             OriginalValue = value;
             Options = options;
             Compress = compress;
+            Value = Array.Empty<byte>();
         }
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace MemcachedTiny.DistributedCache
         /// 压缩数据
         /// </summary>
         /// <returns></returns>
-        protected virtual byte[] CompressValue()
+        protected virtual byte[]? CompressValue()
         {
             return Compress?.Compress(OriginalValue);
         }
